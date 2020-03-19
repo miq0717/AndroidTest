@@ -1,0 +1,169 @@
+DESIGN PATTERN USED: MVVM (Model View ViewModel)
+
+DESIGN PATTERN EXPLANATION: You'll see that I have no Model Class or Package. That's Because I've Used Java's File for Video Files as Model;
+
+I've sent video files to my View Class through ViewModel and processing them in Repository From SD Card and Internal Storage of the Device
+
+
+PseudoCode For the Application
+
+MainActivity------------------------------------------------>
+
+PROCEDURE onCreate
+			Bind Class With Layout
+			mainActivityViewModel <- ViewModelProvider(this).get(MainActivityViewModel.class)
+END PROCEDURE
+
+
+PROCEDURE setRecyclerViewControls()
+			sets Layout Manager for RecyclerView of The Video Files
+END PROCEDURE
+
+
+PROCEDURE takePermissionForVideo()
+			IF storagePermission != GRANTED
+				Ask For Storage Permission
+			END IF
+			
+			ELSE IF storagePermission == GRANTED
+				getVideoFileAnSetAdapter()
+			END ELSE IF
+			
+			ELSE IF storagePermission == DENIED
+				Show Allow Message
+			END ELSE IF
+END PROCEDURE
+
+
+PROCEDURE getVideoFileAnSetAdapter()
+			mainActivityViewModel.init()
+			videoFileAdapter <- VideoFileAdapter(getApplicationContext(), mainActivityViewModel.getVideoFiles(), mainActivityViewModel.getVideoThumbnails())
+			recyClerView <- videoFileAdapter
+END PROCEDURE
+
+
+MainActivityViewModel ---------------------------------------------->
+
+
+PROCEDURE init()
+			videoRepository <- VideoRepository.getInstance()
+			videoFiles <- VideoRepository.getVideoFiles()
+			videoThumbnails <- videoRepository.getVideoThumbNails()
+END PROCEDURE
+
+
+PROCEDURE getVideoFiles()
+			return videoFiles
+END PROCEDURE
+
+
+PROCEDURE getVideoThumbnails()
+			return videoThumbnails
+END PROCEDURE
+
+
+VideoRepository --------------------------------------------------->
+
+
+PROCEDURE getInstance()
+			IF INSTANCE == null
+				INSTANCE <- VideoRepository
+			END IF
+			return INSTANCE
+END PROCEDURE
+
+
+PROCEDURE getVideoFiles()
+			File <- File("/pathname/")
+			videoFiles <- getVideoFiles(File)
+			data <- MutableLiveData()
+			data.value <- videoFiles
+			return data
+END PROCEDURE
+
+
+PROCEDURE getVideoFiles()
+			File <- File("/pathname/")
+			videoFiles <- getVideoFiles(File)
+			data <- MutableLiveData()
+			data.value <- videoFiles
+			return data
+END PROCEDURE
+
+
+PROCEDURE getVideoFiles(directory : File)
+			File[] listFile <- directory.listFiles()
+			IF listFile != null && listFile.length>0
+				for (int i = 0; i < listFile.length; i++){
+					IF listFile[i].isDirectory()
+						getVideoFiles(listFile[i]) //Recursive Call
+					END IF
+					
+					ELSE
+						if (listFile[i].getName().endsWith(".mp4")) {
+                        for (int j = 0; j < videoFiles.size(); j++) {
+                            if (videoFiles.get(j).getName().equals(listFile[i].getName())) {
+                                permission = true;
+                            }
+                        }
+                        if (permission)
+                            permission = false;
+                        else
+                            videoFiles.add(listFile[i]);
+                    }
+				}
+			END IF
+			return videoFiles
+END PROCEDURE
+
+
+PROCEDURE getVideoThumbNails()
+	for(int i = 0; i< videoFiles.size; i++){
+		Create Bitmap for Every Corresponding Video File
+		videoThumbNails.add(bitmap);
+	}
+	
+	thumbnails <- MutableLiveData()
+	thumbnails.value <- videoThumbNails
+	
+	return thumbnails
+END PROCEDURE
+
+
+VideoFileAdapter ------------------------------------------------------->
+
+Get videoFiles and videoThumbNails in Constructor
+
+PROCEDURE onBindViewHolder()
+		set_video_title
+		set_video_thumbnail
+		
+		viewHolder.onClick <- Move to VideoPlayerActivity
+END PROCEDURE
+
+
+
+VideoPlayerActivity --------------------------------------------------->
+
+set_video_path
+
+PROCEDURE playVideo()
+	
+	mediaController <- MediaController()
+	mediaController.anchorView <- videoView
+	setListeners(mediaController)
+	return thumbnails
+END PROCEDURE
+
+
+PROCEDURE setListeners(mediaController : MediaController)
+	videoView.onPrepare <- Play Video
+	videoView.onCompletion <- Opt For Rewind
+	videoView.Next <- Forward Functionality
+	mediaController.prevNextListener <- next <- Play Next Video
+									 <- prev <- Play Previous Video
+	Rewind <- Play Same Video Again
+	
+	onBackPressed <- stop Video Playback
+
+END PROCEDURE
